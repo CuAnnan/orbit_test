@@ -55,6 +55,8 @@ class Planet
     angularPosition;
     position;
     dayOfYear;
+
+    static ticker = 0;
     // measured in ms
 
     constructor(name)
@@ -62,8 +64,13 @@ class Planet
         this.name = name;
         this.fillColor = randomCelestialBodyColor();
         this.strokeColor = randomCelestialBodyColor();
-        this.satellites = randomSeededIntInRange(0,10);
+        this.satellites = new Array(randomSeededIntInRange(0,10));
         this.dayOfYear = 0;
+    }
+
+    static resetTicker()
+    {
+        Planet.ticker = 0;
     }
 
     /**
@@ -78,8 +85,8 @@ class Planet
     {
         this.orbitalRadius = params.orbitalRadius;
         this.planetaryRadius = params.planetaryRadius;
-        console.log(this.planetaryRadius);
-        this.yearLength = Math.floor(570 * params.yearLength);
+        this.yearLength = Math.floor(350*this.orbitalRadius * Math.pow(2.5, Math.pow(1.25, ++Planet.ticker)));
+
         this.initialAngularPosition = params.angularPosition;
         this.angularPosition = params.angularPosition;
         return this;
@@ -129,7 +136,7 @@ class Planet
 
     addTime(time)
     {
-        this.dayOfYear += time/100;
+        this.dayOfYear += time/250;
         if(this.dayOfYear > this.yearLength)
         {
             this.dayOfYear -= this.yearLength;
@@ -175,25 +182,22 @@ class StarSystem
     {
         let orbitalRadius = 0.15;
         const aveOrbitalDelta = 0.8 / this.planets.length ;
-
-        const avePlanetIndex =Math.floor(this.planets.length / 3)-1;
+        Planet.resetTicker();
 
         const planetSizeMultiplierRatio = 1 / this.planets.length / 2;
         let yearLength = 0.25;
 
         for(let i = 0; i < this.planets.length; i++)
         {
-            const variance = randomSeededIntInRange(0,40) - 20;
+            const variance = randomSeededIntInRange(0,100) - 50;
             const offset = aveOrbitalDelta + (aveOrbitalDelta * variance / 100);
             const planetSizeMultiplierAmount = 0.5 + (i + 1) * planetSizeMultiplierRatio;
 
             this.planets[i].initialise({
                 orbitalRadius,
                 planetaryRadius:offset * planetSizeMultiplierAmount,
-                yearLength,
                 angularPosition:Game.prng() * Math.PI * 2
             });
-            yearLength *= Math.pow(2, 1.005);
 
             orbitalRadius += offset;
 
@@ -339,6 +343,7 @@ class Game {
             this.currentPlanet = this.underMouse;
             this.$currentPlanetContainer.style.visibility = "visible";
             document.getElementById('currentPlanetName').innerText = this.underMouse.name;
+            document.getElementById('currentPlanetSatelliteCount').innerText = this.underMouse.satellites.length;
         }
         else
         {
@@ -441,7 +446,7 @@ class Game {
                 {
                     name:'Cerulean Path',
                     stars:1,
-                    planetStarRatio:8
+                    planetStarRatio:20
                 },
             ]}
         };
